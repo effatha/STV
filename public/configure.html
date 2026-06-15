@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stremio Live TV – Configure</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d0d0d;
+    color: #eee;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 40px 16px;
+  }
+  .card {
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 6px; color: #fff; }
+  .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 28px; }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid #333;
+    background: transparent;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.15s;
+  }
+  .tab.active {
+    border-color: #7b2ff7;
+    color: #fff;
+    background: rgba(123,47,247,0.15);
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px; margin-top: 16px; }
+  input[type="text"], input[type="url"], input[type="password"] {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1.5px solid #333;
+    background: #0d0d0d;
+    color: #eee;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus { border-color: #7b2ff7; }
+  .btn {
+    margin-top: 28px;
+    width: 100%;
+    padding: 13px;
+    border-radius: 8px;
+    border: none;
+    background: #7b2ff7;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn:hover { background: #6320d0; }
+  .install-link {
+    margin-top: 20px;
+    padding: 14px;
+    border-radius: 8px;
+    background: #111;
+    border: 1.5px solid #333;
+    word-break: break-all;
+    font-size: 0.82rem;
+    color: #ccc;
+  }
+  .install-link a {
+    color: #a57fff;
+    text-decoration: none;
+  }
+  .install-link a:hover { text-decoration: underline; }
+  .error { color: #ff6b6b; font-size: 0.85rem; margin-top: 10px; display: none; }
+  .copy-btn {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    background: #333;
+    color: #eee;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+  .copy-btn:hover { background: #444; }
+  .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .logo-icon { font-size: 2rem; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo-row">
+    <span class="logo-icon">📡</span>
+    <h1>Stremio Live TV</h1>
+  </div>
+  <p class="subtitle">Configure your M3U playlist or Xtream Codes provider</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('m3u')">M3U Playlist</button>
+    <button class="tab" onclick="switchTab('xtream')">Xtream Codes</button>
+  </div>
+
+  <!-- M3U Panel -->
+  <div id="panel-m3u" class="panel active">
+    <label for="m3u-url">Playlist URL (.m3u or .m3u8)</label>
+    <input id="m3u-url" type="url" placeholder="http://your-provider.com/playlist.m3u" />
+    <p class="error" id="m3u-error"></p>
+    <button class="btn" onclick="installM3U()">Generate Install Link</button>
+  </div>
+
+  <!-- Xtream Panel -->
+  <div id="panel-xtream" class="panel">
+    <label for="xt-host">Server URL</label>
+    <input id="xt-host" type="url" placeholder="http://your-provider.com:8080" />
+    <label for="xt-user">Username</label>
+    <input id="xt-user" type="text" placeholder="username" />
+    <label for="xt-pass">Password</label>
+    <input id="xt-pass" type="password" placeholder="password" />
+    <p class="error" id="xt-error"></p>
+    <button class="btn" onclick="installXtream()">Generate Install Link</button>
+  </div>
+
+  <!-- Result -->
+  <div id="result" style="display:none">
+    <div class="install-link">
+      <div style="margin-bottom:6px; color:#888; font-size:0.8rem;">Click to install in Stremio:</div>
+      <a id="install-url" href="#"></a>
+      <br/>
+      <button class="copy-btn" onclick="copyLink()">Copy Link</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let activeTab = 'm3u';
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.tab').forEach((el, i) => {
+      el.classList.toggle('active', (i === 0 && tab === 'm3u') || (i === 1 && tab === 'xtream'));
+    });
+    document.getElementById('panel-m3u').classList.toggle('active', tab === 'm3u');
+    document.getElementById('panel-xtream').classList.toggle('active', tab === 'xtream');
+    document.getElementById('result').style.display = 'none';
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  function buildInstallUrl(config) {
+    const encoded = btoa(JSON.stringify(config));
+    const origin = window.location.origin;
+    const manifestUrl = `${origin}/${encoded}/manifest.json`;
+    // stremio:// deep link
+    return 'stremio://' + manifestUrl.replace(/^https?:\/\//, '');
+  }
+
+  function showResult(config) {
+    const installUrl = buildInstallUrl(config);
+    const el = document.getElementById('install-url');
+    el.href = installUrl;
+    el.textContent = installUrl;
+    document.getElementById('result').style.display = 'block';
+  }
+
+  function installM3U() {
+    showError('m3u-error', '');
+    const url = document.getElementById('m3u-url').value.trim();
+    if (!url) { showError('m3u-error', 'Please enter a playlist URL.'); return; }
+    try { new URL(url); } catch { showError('m3u-error', 'Please enter a valid URL.'); return; }
+    showResult({ type: 'm3u', url });
+  }
+
+  function installXtream() {
+    showError('xt-error', '');
+    const host = document.getElementById('xt-host').value.trim();
+    const username = document.getElementById('xt-user').value.trim();
+    const password = document.getElementById('xt-pass').value.trim();
+    if (!host || !username || !password) {
+      showError('xt-error', 'Please fill in all fields.');
+      return;
+    }
+    try { new URL(host); } catch { showError('xt-error', 'Please enter a valid server URL.'); return; }
+    showResult({ type: 'xtream', host, username, password });
+  }
+
+  function copyLink() {
+    const url = document.getElementById('install-url').textContent;
+    navigator.clipboard.writeText(url).catch(() => {});
+  }
+</script>
+</body>
+</html>
