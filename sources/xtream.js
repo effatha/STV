@@ -70,6 +70,38 @@ class XtreamClient {
       streamId: s.stream_id,
     }));
   }
+
+  /** Returns VOD categories */
+  async getVodCategories() {
+    const data = await this._get(this._api('get_vod_categories'));
+    if (!Array.isArray(data)) return [];
+    return data.map(c => ({ id: c.category_id, name: c.category_name }));
+  }
+
+  /** Returns all VOD movies as { id, name, logo, group, year, url } */
+  async getVod() {
+    const [streams, categories] = await Promise.all([
+      this._get(this._api('get_vod_streams')),
+      this.getVodCategories().catch(() => []),
+    ]);
+
+    if (!Array.isArray(streams)) return [];
+
+    const catMap = {};
+    for (const c of categories) catMap[c.id] = c.name;
+
+    return streams.map((s, idx) => ({
+      id: `vod_${s.stream_id}`,
+      name: s.name || `Movie ${idx}`,
+      logo: s.stream_icon || '',
+      group: catMap[s.category_id] || 'Uncategorized',
+      year: s.year || null,
+      rating: s.rating || null,
+      url: `${this.base}/movie/${this.username}/${this.password}/${s.stream_id}.${s.container_extension || 'mp4'}`,
+      streamId: s.stream_id,
+      container: s.container_extension || 'mp4',
+    }));
+  }
 }
 
 module.exports = { XtreamClient };

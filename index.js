@@ -2,9 +2,10 @@
 
 const express = require('express');
 const path = require('path');
-const { loadChannels } = require('./sources/loader');
+const { loadChannels, loadVod } = require('./sources/loader');
 const { catalogHandler } = require('./handlers/catalog');
 const { streamHandler } = require('./handlers/stream');
+const { vodCatalogHandler, vodStreamHandler } = require('./handlers/vod');
 
 const PORT = process.env.PORT || 7860;
 const app = express();
@@ -40,38 +41,70 @@ function decodeConfig(encoded) {
 // ─── Manifest ────────────────────────────────────────────────────────────────
 async function buildManifest(config) {
   let genres = [];
+  let countries = [];
+  let vodGenres = [];
+
   try {
-    const { groups } = await loadChannels(config);
+    const { groups, countries: c } = await loadChannels(config);
     genres = groups;
+    countries = c;
   } catch (e) {
-    console.error('[manifest] could not load genres:', e.message);
+    console.error('[manifest] could not load live channels:', e.message);
   }
+
+  if (config.type === 'xtream') {
+    try {
+      const { movies } = await loadVod(config);
+      const vodGroupSet = new Set(movies.map(m => m.group));
+      vodGenres = ['All', ...Array.from(vodGroupSet).sort()];
+    } catch (e) {
+      console.error('[manifest] could not load VOD:', e.message);
+    }
+  }
+
+  const catalogs = [
+    {
+      type: 'tv',
+      id: 'livetv',
+      name: 'Live TV',
+      extra: [
+        { name: 'genre', options: genres, isRequired: false },
+        { name: 'country', options: countries, isRequired: false },
+        { name: 'skip', isRequired: false },
+        { name: 'search', isRequired: false },
+      ],
+    },
+  ];
+
+  if (config.type === 'xtream') {
+    catalogs.push({
+      type: 'movie',
+      id: 'vod',
+      name: 'VOD',
+      extra: [
+        { name: 'genre', options: vodGenres, isRequired: false },
+        { name: 'skip', isRequired: false },
+        { name: 'search', isRequired: false },
+      ],
+    });
+  }
+
+  const types = config.type === 'xtream' ? ['tv', 'movie'] : ['tv'];
 
   return {
     id: 'community.livetv.' + Buffer.from(JSON.stringify(config)).toString('base64').slice(0, 12),
-    version: '1.0.0',
+    version: '1.1.0',
     name: 'Live TV',
-    description: 'Live TV channels from your M3U playlist or Xtream Codes provider.',
+    description: 'Live TV channels and VOD from your M3U playlist or Xtream Codes provider.',
     logo: 'https://dl.strem.io/addon-logo.png',
     background: 'https://dl.strem.io/addon-background.jpg',
     resources: ['catalog', 'stream', 'meta'],
-    types: ['tv'],
-    idPrefixes: ['xtream_', 'livetv_'],
-    catalogs: [
-      {
-        type: 'tv',
-        id: 'livetv',
-        name: 'Live TV',
-        extra: [
-          { name: 'genre', options: genres, isRequired: false },
-          { name: 'skip', isRequired: false },
-          { name: 'search', isRequired: false },
-        ],
-      },
-    ],
+    types,
+    idPrefixes: ['xtream_', 'livetv_', 'vod_'],
+    catalogs,
     behaviorHints: {
       configurable: true,
-      configurationURL: `http://localhost:${PORT}/configure`,
+      configurationURL: `https://stv-ncta.onrender.com/configure`,
     },
   };
 }
@@ -126,10 +159,9 @@ app.get('/:config/catalog/:type/:id.json', async (req, res) => {
     }
   }
 
-  const result = await catalogHandler(
-    { type: req.params.type, id: 'livetv', extra },
-    config
-  );
+  const result = req.params.type === 'movie'
+    ? await vodCatalogHandler({ extra }, config)
+    : await catalogHandler({ type: req.params.type, id: 'livetv', extra }, config);
   res.json(result);
 });
 
@@ -148,10 +180,9 @@ app.get('/:config/catalog/:type/:id/:extra.json', async (req, res) => {
     }
   }
 
-  const result = await catalogHandler(
-    { type: req.params.type, id: 'livetv', extra },
-    config
-  );
+  const result = req.params.type === 'movie'
+    ? await vodCatalogHandler({ extra }, config)
+    : await catalogHandler({ type: req.params.type, id: 'livetv', extra }, config);
   res.json(result);
 });
 
@@ -165,7 +196,10 @@ app.get('/:config/meta/:type/:id.json', async (req, res) => {
 app.get('/:config/stream/:type/:id.json', async (req, res) => {
   const config = decodeConfig(req.params.config);
   if (!config) return res.status(400).json({ error: 'Invalid config' });
-  const result = await streamHandler({ type: req.params.type, id: req.params.id }, config);
+  const { type, id } = req.params;
+  const result = type === 'movie' || id.startsWith('vod_')
+    ? await vodStreamHandler({ id }, config)
+    : await streamHandler({ type, id }, config);
   res.json(result);
 });
 

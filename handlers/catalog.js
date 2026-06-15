@@ -7,9 +7,10 @@ const PAGE_SIZE = 100;
 /**
  * Stremio catalog handler.
  * type = 'tv', id = 'livetv'
- * extra.genre  → filter by group
- * extra.skip   → pagination offset
- * extra.search → search by name
+ * extra.genre   → filter by group
+ * extra.country → filter by 2-letter country code
+ * extra.skip    → pagination offset
+ * extra.search  → search by name
  */
 async function catalogHandler({ type, id, extra }, config) {
   try {
@@ -20,6 +21,11 @@ async function catalogHandler({ type, id, extra }, config) {
     // Filter by genre
     if (extra && extra.genre && extra.genre !== 'All') {
       list = list.filter(c => c.group === extra.genre);
+    }
+
+    // Filter by country code (XX| prefix)
+    if (extra && extra.country && extra.country !== 'All') {
+      list = list.filter(c => c.country === extra.country);
     }
 
     // Search
