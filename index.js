@@ -122,6 +122,7 @@ async function metaHandler({ type, id }, config) {
         type: 'tv',
         name: ch.name,
         poster: ch.logo || undefined,
+        posterShape: 'square',
         logo: ch.logo || undefined,
         genres: [ch.group],
         description: `Live: ${ch.name}`,

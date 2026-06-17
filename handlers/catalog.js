@@ -52,11 +52,10 @@ function channelToMeta(ch) {
     type: 'tv',
     name: ch.name,
     poster: ch.logo || undefined,
+    posterShape: 'square',
     logo: ch.logo || undefined,
-    background: ch.logo || undefined,
     genres: [ch.group],
     description: `Live: ${ch.name}`,
-    // Mark as live
     links: [],
     behaviorHints: { defaultVideoId: ch.id },
   };
