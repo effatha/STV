@@ -11,33 +11,66 @@ function extractCountry(name) {
 }
 
 /**
- * Load channels from the user's config (M3U or Xtream).
- * Returns { channels, groups, countries } with 10-minute caching.
+ * Resolve the display group for a channel based on config options:
+ *   categoryMode = 'country'   → use country code (or custom label)
+ *   categoryMode = 'original'  → keep provider's group-title (default)
+ */
+function resolveGroup(channel, config) {
+  if (config.categoryMode === 'country') {
+    if (!channel.country) return config.labels?.['__other__'] || 'Other';
+    return config.labels?.[channel.country] || channel.country;
+  }
+  return channel.group;
+}
+
+/**
+ * Load raw channels without applying any config filters.
+ * Used by the preview API so the UI can show all available countries.
+ */
+async function loadRawChannels(config) {
+  const cacheKey = 'raw:' + JSON.stringify({ type: config.type, url: config.url, host: config.host, username: config.username, password: config.password });
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
+  let channels = [];
+  if (config.type === 'm3u') {
+    channels = await fetchM3U(config.url);
+  } else if (config.type === 'xtream') {
+    const client = new XtreamClient({ host: config.host, username: config.username, password: config.password });
+    channels = await client.getChannels();
+  } else {
+    throw new Error('Unknown source type: ' + config.type);
+  }
+
+  channels = channels.map(c => ({ ...c, country: extractCountry(c.name) }));
+  cache.set(cacheKey, channels);
+  return channels;
+}
+
+/**
+ * Load channels applying country whitelist, category mode, and label overrides.
+ * Returns { channels, groups, countries }
  */
 async function loadChannels(config) {
   const cacheKey = 'live:' + JSON.stringify(config);
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  let channels = [];
+  let channels = await loadRawChannels(config);
 
-  if (config.type === 'm3u') {
-    channels = await fetchM3U(config.url);
-  } else if (config.type === 'xtream') {
-    const client = new XtreamClient({
-      host: config.host,
-      username: config.username,
-      password: config.password,
-    });
-    channels = await client.getChannels();
-  } else {
-    throw new Error('Unknown source type: ' + config.type);
+  // ── Country whitelist ────────────────────────────────────────────────────
+  if (config.countries && config.countries.length > 0) {
+    channels = channels.filter(c =>
+      c.country
+        ? config.countries.includes(c.country)
+        : config.countries.includes('__other__')
+    );
   }
 
-  // Attach country code to each channel
+  // ── Apply category mode & labels ─────────────────────────────────────────
   channels = channels.map(c => ({
     ...c,
-    country: extractCountry(c.name),
+    group: resolveGroup(c, config),
   }));
 
   const groupSet = new Set(channels.map(c => c.group));
@@ -53,7 +86,6 @@ async function loadChannels(config) {
 
 /**
  * Load VOD movies from Xtream Codes.
- * Returns { movies } with 10-minute caching.
  */
 async function loadVod(config) {
   if (config.type !== 'xtream') return { movies: [] };
@@ -62,16 +94,11 @@ async function loadVod(config) {
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  const client = new XtreamClient({
-    host: config.host,
-    username: config.username,
-    password: config.password,
-  });
-
+  const client = new XtreamClient({ host: config.host, username: config.username, password: config.password });
   const movies = await client.getVod();
   const result = { movies };
   cache.set(cacheKey, result);
   return result;
 }
 
-module.exports = { loadChannels, loadVod };
+module.exports = { loadChannels, loadRawChannels, loadVod };

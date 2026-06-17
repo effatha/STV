@@ -21,91 +21,159 @@
     border-radius: 12px;
     padding: 36px 32px;
     width: 100%;
-    max-width: 520px;
+    max-width: 580px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.6);
   }
   h1 { font-size: 1.6rem; margin-bottom: 6px; color: #fff; }
   .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 28px; }
-  .tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
+
+  /* Steps indicator */
+  .steps { display: flex; gap: 0; margin-bottom: 28px; }
+  .step-dot {
+    flex: 1; text-align: center; font-size: 0.75rem; color: #555;
+    position: relative; padding-bottom: 8px;
   }
+  .step-dot::after {
+    content: ''; display: block;
+    height: 2px; background: #333;
+    position: absolute; bottom: 0; left: 50%; right: 0;
+  }
+  .step-dot:last-child::after { display: none; }
+  .step-dot.active { color: #a57fff; }
+  .step-dot.done { color: #5cb85c; }
+  .step-dot.active::after, .step-dot.done::after { background: #7b2ff7; }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #333; font-size: 0.75rem; margin-bottom: 4px;
+  }
+  .step-dot.active .step-num { background: #7b2ff7; color: #fff; }
+  .step-dot.done .step-num { background: #5cb85c; color: #fff; }
+
+  /* Source tabs */
+  .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
   .tab {
-    flex: 1;
-    padding: 10px;
-    border-radius: 8px;
-    border: 2px solid #333;
-    background: transparent;
-    color: #aaa;
-    cursor: pointer;
-    font-size: 0.95rem;
-    transition: all 0.15s;
+    flex: 1; padding: 10px; border-radius: 8px;
+    border: 2px solid #333; background: transparent;
+    color: #aaa; cursor: pointer; font-size: 0.95rem; transition: all 0.15s;
   }
-  .tab.active {
-    border-color: #7b2ff7;
-    color: #fff;
-    background: rgba(123,47,247,0.15);
-  }
+  .tab.active { border-color: #7b2ff7; color: #fff; background: rgba(123,47,247,0.15); }
+
   .panel { display: none; }
   .panel.active { display: block; }
+
   label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px; margin-top: 16px; }
   input[type="text"], input[type="url"], input[type="password"] {
-    width: 100%;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1.5px solid #333;
-    background: #0d0d0d;
-    color: #eee;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color 0.15s;
+    width: 100%; padding: 10px 14px;
+    border-radius: 8px; border: 1.5px solid #333;
+    background: #0d0d0d; color: #eee; font-size: 0.95rem;
+    outline: none; transition: border-color 0.15s;
   }
   input:focus { border-color: #7b2ff7; }
+
   .btn {
-    margin-top: 28px;
-    width: 100%;
-    padding: 13px;
-    border-radius: 8px;
-    border: none;
-    background: #7b2ff7;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
+    margin-top: 20px; width: 100%; padding: 13px;
+    border-radius: 8px; border: none;
+    background: #7b2ff7; color: #fff;
+    font-size: 1rem; font-weight: 600;
+    cursor: pointer; transition: background 0.15s;
   }
   .btn:hover { background: #6320d0; }
-  .install-link {
-    margin-top: 20px;
-    padding: 14px;
-    border-radius: 8px;
-    background: #111;
-    border: 1.5px solid #333;
-    word-break: break-all;
-    font-size: 0.82rem;
-    color: #ccc;
+  .btn:disabled { background: #444; cursor: not-allowed; }
+  .btn-secondary {
+    margin-top: 10px; width: 100%; padding: 11px;
+    border-radius: 8px; border: 1.5px solid #555;
+    background: transparent; color: #aaa;
+    font-size: 0.95rem; cursor: pointer;
   }
-  .install-link a {
-    color: #a57fff;
-    text-decoration: none;
-  }
-  .install-link a:hover { text-decoration: underline; }
+  .btn-secondary:hover { border-color: #aaa; color: #fff; }
+
   .error { color: #ff6b6b; font-size: 0.85rem; margin-top: 10px; display: none; }
+
+  /* Step 2 — Country picker */
+  .section-title {
+    font-size: 0.8rem; color: #888; text-transform: uppercase;
+    letter-spacing: 0.08em; margin: 20px 0 10px;
+  }
+  .country-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px; max-height: 280px; overflow-y: auto;
+    padding: 4px; margin-bottom: 4px;
+  }
+  .country-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 10px; border-radius: 8px;
+    border: 1.5px solid #333; background: #111;
+    cursor: pointer; transition: all 0.12s; user-select: none;
+  }
+  .country-chip:hover { border-color: #7b2ff7; }
+  .country-chip.selected { border-color: #7b2ff7; background: rgba(123,47,247,0.18); }
+  .country-chip input[type="checkbox"] { display: none; }
+  .country-code { font-weight: 700; font-size: 0.9rem; }
+  .country-count { font-size: 0.7rem; color: #666; margin-left: auto; }
+  .chip-check { font-size: 0.7rem; color: #7b2ff7; display: none; }
+  .country-chip.selected .chip-check { display: block; }
+
+  /* Category label editor */
+  .label-editor { margin-top: 8px; }
+  .label-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px;
+  }
+  .label-code {
+    min-width: 36px; font-weight: 700; font-size: 0.85rem; color: #a57fff;
+  }
+  .label-input {
+    flex: 1; padding: 6px 10px; border-radius: 6px;
+    border: 1.5px solid #333; background: #0d0d0d;
+    color: #eee; font-size: 0.85rem; outline: none;
+  }
+  .label-input:focus { border-color: #7b2ff7; }
+
+  /* Category mode toggle */
+  .toggle-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 6px;
+  }
+  .toggle-btn {
+    flex: 1; padding: 9px; border-radius: 8px;
+    border: 1.5px solid #333; background: #111;
+    color: #aaa; cursor: pointer; font-size: 0.82rem; text-align: center;
+    transition: all 0.12s;
+  }
+  .toggle-btn.active { border-color: #7b2ff7; color: #fff; background: rgba(123,47,247,0.15); }
+
+  /* Result */
+  .install-box {
+    margin-top: 20px; padding: 14px;
+    border-radius: 8px; background: #111;
+    border: 1.5px solid #333;
+  }
+  .install-box .hint { color: #666; font-size: 0.78rem; margin-bottom: 6px; }
+  .install-url { word-break: break-all; font-size: 0.8rem; color: #a57fff; }
   .copy-btn {
-    display: inline-block;
-    margin-top: 8px;
-    padding: 6px 14px;
-    border-radius: 6px;
-    background: #333;
-    color: #eee;
-    border: none;
-    cursor: pointer;
-    font-size: 0.8rem;
+    margin-top: 8px; padding: 6px 14px;
+    border-radius: 6px; background: #333; color: #eee;
+    border: none; cursor: pointer; font-size: 0.8rem;
   }
   .copy-btn:hover { background: #444; }
+
+  .spinner { display: inline-block; }
+  .spinner::after {
+    content: ''; display: inline-block;
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid #fff; border-top-color: transparent;
+    animation: spin 0.6s linear infinite; vertical-align: middle; margin-left: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
   .logo-icon { font-size: 2rem; }
+  .info-bar {
+    background: #111; border-radius: 8px; padding: 10px 14px;
+    font-size: 0.82rem; color: #888; margin-bottom: 16px;
+  }
+  .info-bar strong { color: #eee; }
 </style>
 </head>
 <body>
@@ -114,103 +182,249 @@
     <span class="logo-icon">📡</span>
     <h1>Stremio Live TV</h1>
   </div>
-  <p class="subtitle">Configure your M3U playlist or Xtream Codes provider</p>
+  <p class="subtitle">Configure your IPTV source, pick countries, and install</p>
 
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('m3u')">M3U Playlist</button>
-    <button class="tab" onclick="switchTab('xtream')">Xtream Codes</button>
+  <!-- Step indicator -->
+  <div class="steps">
+    <div class="step-dot active" id="s1">
+      <div class="step-num">1</div>
+      Source
+    </div>
+    <div class="step-dot" id="s2">
+      <div class="step-num">2</div>
+      Countries
+    </div>
+    <div class="step-dot" id="s3">
+      <div class="step-num">3</div>
+      Install
+    </div>
   </div>
 
-  <!-- M3U Panel -->
-  <div id="panel-m3u" class="panel active">
-    <label for="m3u-url">Playlist URL (.m3u or .m3u8)</label>
-    <input id="m3u-url" type="url" placeholder="http://your-provider.com/playlist.m3u" />
-    <p class="error" id="m3u-error"></p>
-    <button class="btn" onclick="installM3U()">Generate Install Link</button>
+  <!-- ── STEP 1 ─────────────────────────────────────────────────────────── -->
+  <div id="step1">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('m3u')">M3U Playlist</button>
+      <button class="tab" onclick="switchTab('xtream')">Xtream Codes</button>
+    </div>
+
+    <div id="panel-m3u" class="panel active">
+      <label for="m3u-url">Playlist URL (.m3u or .m3u8)</label>
+      <input id="m3u-url" type="url" placeholder="http://your-provider.com/playlist.m3u" />
+    </div>
+
+    <div id="panel-xtream" class="panel">
+      <label for="xt-host">Server URL</label>
+      <input id="xt-host" type="url" placeholder="http://your-provider.com:8080" />
+      <label for="xt-user">Username</label>
+      <input id="xt-user" type="text" placeholder="username" autocomplete="off" />
+      <label for="xt-pass">Password</label>
+      <input id="xt-pass" type="password" placeholder="password" autocomplete="off" />
+    </div>
+
+    <p class="error" id="step1-error"></p>
+    <button class="btn" id="btn-preview" onclick="doPreview()">Next — Load Channels</button>
   </div>
 
-  <!-- Xtream Panel -->
-  <div id="panel-xtream" class="panel">
-    <label for="xt-host">Server URL</label>
-    <input id="xt-host" type="url" placeholder="http://your-provider.com:8080" />
-    <label for="xt-user">Username</label>
-    <input id="xt-user" type="text" placeholder="username" />
-    <label for="xt-pass">Password</label>
-    <input id="xt-pass" type="password" placeholder="password" />
-    <p class="error" id="xt-error"></p>
-    <button class="btn" onclick="installXtream()">Generate Install Link</button>
+  <!-- ── STEP 2 ─────────────────────────────────────────────────────────── -->
+  <div id="step2" style="display:none">
+    <div class="info-bar" id="preview-info"></div>
+
+    <div class="section-title">Category mode</div>
+    <div class="toggle-row">
+      <div class="toggle-btn active" id="mode-country" onclick="setCatMode('country')">
+        🌍 Group by Country
+      </div>
+      <div class="toggle-btn" id="mode-original" onclick="setCatMode('original')">
+        📂 Keep Provider Groups
+      </div>
+    </div>
+
+    <div class="section-title">Countries to include <span style="color:#555;font-size:0.75em">(uncheck to hide)</span></div>
+    <div class="country-grid" id="country-grid"></div>
+
+    <div id="labels-section">
+      <div class="section-title">Category labels <span style="color:#555;font-size:0.75em">(rename each country's folder)</span></div>
+      <div class="label-editor" id="label-editor"></div>
+    </div>
+
+    <p class="error" id="step2-error"></p>
+    <button class="btn" onclick="doInstall()">Generate Install Link</button>
+    <button class="btn-secondary" onclick="goBack()">← Back</button>
   </div>
 
-  <!-- Result -->
-  <div id="result" style="display:none">
-    <div class="install-link">
-      <div style="margin-bottom:6px; color:#888; font-size:0.8rem;">Click to install in Stremio:</div>
-      <a id="install-url" href="#"></a>
+  <!-- ── STEP 3 ─────────────────────────────────────────────────────────── -->
+  <div id="step3" style="display:none">
+    <div class="install-box">
+      <div class="hint">Click to install in Stremio:</div>
+      <div class="install-url" id="install-url"></div>
       <br/>
       <button class="copy-btn" onclick="copyLink()">Copy Link</button>
     </div>
+    <button class="btn-secondary" style="margin-top:12px" onclick="goBack2()">← Back</button>
   </div>
 </div>
 
 <script>
   let activeTab = 'm3u';
+  let previewData = null;   // { total, countries, groups }
+  let catMode = 'country';  // 'country' | 'original'
+  let baseConfig = null;
 
+  // ── Tab switch ────────────────────────────────────────────────────────────
   function switchTab(tab) {
     activeTab = tab;
-    document.querySelectorAll('.tab').forEach((el, i) => {
-      el.classList.toggle('active', (i === 0 && tab === 'm3u') || (i === 1 && tab === 'xtream'));
-    });
-    document.getElementById('panel-m3u').classList.toggle('active', tab === 'm3u');
-    document.getElementById('panel-xtream').classList.toggle('active', tab === 'xtream');
-    document.getElementById('result').style.display = 'none';
+    document.querySelectorAll('.tab').forEach((el, i) =>
+      el.classList.toggle('active', (i===0 && tab==='m3u') || (i===1 && tab==='xtream'))
+    );
+    document.getElementById('panel-m3u').classList.toggle('active', tab==='m3u');
+    document.getElementById('panel-xtream').classList.toggle('active', tab==='xtream');
   }
 
-  function showError(id, msg) {
+  function showErr(id, msg) {
     const el = document.getElementById(id);
-    el.textContent = msg;
-    el.style.display = msg ? 'block' : 'none';
+    el.textContent = msg; el.style.display = msg ? 'block' : 'none';
   }
 
-  function buildInstallUrl(config) {
+  // ── Step nav ──────────────────────────────────────────────────────────────
+  function setStep(n) {
+    document.getElementById('step1').style.display = n===1 ? 'block' : 'none';
+    document.getElementById('step2').style.display = n===2 ? 'block' : 'none';
+    document.getElementById('step3').style.display = n===3 ? 'block' : 'none';
+    [1,2,3].forEach(i => {
+      const el = document.getElementById('s'+i);
+      el.className = 'step-dot' + (i<n?' done':i===n?' active':'');
+    });
+  }
+
+  function goBack()  { setStep(1); }
+  function goBack2() { setStep(2); }
+
+  // ── Category mode ─────────────────────────────────────────────────────────
+  function setCatMode(mode) {
+    catMode = mode;
+    document.getElementById('mode-country').classList.toggle('active', mode==='country');
+    document.getElementById('mode-original').classList.toggle('active', mode==='original');
+    document.getElementById('labels-section').style.display = mode==='country' ? 'block' : 'none';
+  }
+
+  // ── Step 1 → fetch preview ────────────────────────────────────────────────
+  async function doPreview() {
+    showErr('step1-error', '');
+    let config;
+    if (activeTab === 'm3u') {
+      const url = document.getElementById('m3u-url').value.trim();
+      if (!url) return showErr('step1-error', 'Please enter a playlist URL.');
+      try { new URL(url); } catch { return showErr('step1-error', 'Invalid URL.'); }
+      config = { type: 'm3u', url };
+    } else {
+      const host = document.getElementById('xt-host').value.trim();
+      const username = document.getElementById('xt-user').value.trim();
+      const password = document.getElementById('xt-pass').value.trim();
+      if (!host||!username||!password) return showErr('step1-error', 'Please fill in all fields.');
+      try { new URL(host); } catch { return showErr('step1-error', 'Invalid server URL.'); }
+      config = { type: 'xtream', host, username, password };
+    }
+
+    baseConfig = config;
+    const btn = document.getElementById('btn-preview');
+    btn.disabled = true;
+    btn.innerHTML = 'Loading channels<span class="spinner"></span>';
+
+    try {
+      const encoded = btoa(JSON.stringify(config));
+      const res = await fetch(`/api/preview?config=${encoded}`);
+      if (!res.ok) throw new Error((await res.json()).error || 'Server error');
+      previewData = await res.json();
+      buildStep2();
+      setStep(2);
+    } catch(e) {
+      showErr('step1-error', 'Could not load channels: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Next — Load Channels';
+    }
+  }
+
+  // ── Build step 2 UI ───────────────────────────────────────────────────────
+  function buildStep2() {
+    document.getElementById('preview-info').innerHTML =
+      `<strong>${previewData.total.toLocaleString()}</strong> channels found across
+       <strong>${previewData.countries.length}</strong> countries`;
+
+    const grid = document.getElementById('country-grid');
+    grid.innerHTML = '';
+    previewData.countries.forEach(code => {
+      const chip = document.createElement('label');
+      chip.className = 'country-chip selected';
+      chip.dataset.code = code;
+      chip.innerHTML = `
+        <input type="checkbox" checked />
+        <span class="country-code">${code}</span>
+        <span class="chip-check">✓</span>
+      `;
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('selected');
+        chip.querySelector('input').checked = chip.classList.contains('selected');
+        updateLabelEditor();
+      });
+      grid.appendChild(chip);
+    });
+
+    setCatMode('country');
+    updateLabelEditor();
+  }
+
+  function selectedCountries() {
+    return Array.from(document.querySelectorAll('.country-chip.selected'))
+      .map(el => el.dataset.code);
+  }
+
+  function updateLabelEditor() {
+    const editor = document.getElementById('label-editor');
+    editor.innerHTML = '';
+    selectedCountries().forEach(code => {
+      const row = document.createElement('div');
+      row.className = 'label-row';
+      row.innerHTML = `
+        <span class="label-code">${code}</span>
+        <input class="label-input" id="label-${code}" type="text"
+               placeholder="${code}" value="${code}" />
+      `;
+      editor.appendChild(row);
+    });
+  }
+
+  // ── Step 2 → generate install link ────────────────────────────────────────
+  function doInstall() {
+    showErr('step2-error', '');
+    const countries = selectedCountries();
+    if (countries.length === 0) return showErr('step2-error', 'Select at least one country.');
+
+    const labels = {};
+    countries.forEach(code => {
+      const val = (document.getElementById('label-'+code)?.value || '').trim();
+      if (val && val !== code) labels[code] = val;
+    });
+
+    const config = {
+      ...baseConfig,
+      countries,
+      categoryMode: catMode,
+      ...(Object.keys(labels).length > 0 ? { labels } : {}),
+    };
+
     const encoded = btoa(JSON.stringify(config));
     const origin = window.location.origin;
     const manifestUrl = `${origin}/${encoded}/manifest.json`;
-    // stremio:// deep link
-    return 'stremio://' + manifestUrl.replace(/^https?:\/\//, '');
-  }
+    const installUrl = 'stremio://' + manifestUrl.replace(/^https?:\/\//, '');
 
-  function showResult(config) {
-    const installUrl = buildInstallUrl(config);
-    const el = document.getElementById('install-url');
-    el.href = installUrl;
-    el.textContent = installUrl;
-    document.getElementById('result').style.display = 'block';
-  }
-
-  function installM3U() {
-    showError('m3u-error', '');
-    const url = document.getElementById('m3u-url').value.trim();
-    if (!url) { showError('m3u-error', 'Please enter a playlist URL.'); return; }
-    try { new URL(url); } catch { showError('m3u-error', 'Please enter a valid URL.'); return; }
-    showResult({ type: 'm3u', url });
-  }
-
-  function installXtream() {
-    showError('xt-error', '');
-    const host = document.getElementById('xt-host').value.trim();
-    const username = document.getElementById('xt-user').value.trim();
-    const password = document.getElementById('xt-pass').value.trim();
-    if (!host || !username || !password) {
-      showError('xt-error', 'Please fill in all fields.');
-      return;
-    }
-    try { new URL(host); } catch { showError('xt-error', 'Please enter a valid server URL.'); return; }
-    showResult({ type: 'xtream', host, username, password });
+    document.getElementById('install-url').textContent = installUrl;
+    document.getElementById('install-url').href = installUrl;
+    setStep(3);
   }
 
   function copyLink() {
-    const url = document.getElementById('install-url').textContent;
-    navigator.clipboard.writeText(url).catch(() => {});
+    navigator.clipboard.writeText(document.getElementById('install-url').textContent).catch(()=>{});
   }
 </script>
 </body>

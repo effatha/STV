@@ -2,7 +2,7 @@
 
 const express = require('express');
 const path = require('path');
-const { loadChannels, loadVod } = require('./sources/loader');
+const { loadChannels, loadRawChannels, loadVod } = require('./sources/loader');
 const { catalogHandler } = require('./handlers/catalog');
 const { streamHandler } = require('./handlers/stream');
 const { vodCatalogHandler, vodStreamHandler } = require('./handlers/vod');
@@ -132,6 +132,24 @@ async function metaHandler({ type, id }, config) {
     return { meta: null };
   }
 }
+
+// ─── Preview API (used by configure UI) ──────────────────────────────────────
+app.get('/api/preview', async (req, res) => {
+  const config = decodeConfig(req.query.config);
+  if (!config) return res.status(400).json({ error: 'Invalid config' });
+  try {
+    const channels = await loadRawChannels(config);
+    const countrySet = new Set(channels.map(c => c.country).filter(Boolean));
+    const groupSet   = new Set(channels.map(c => c.group));
+    res.json({
+      total: channels.length,
+      countries: Array.from(countrySet).sort(),
+      groups: Array.from(groupSet).sort(),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 app.get('/:config/manifest.json', async (req, res) => {
