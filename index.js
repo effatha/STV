@@ -6,6 +6,7 @@ const { loadChannels, loadVod } = require('./sources/loader');
 const { catalogHandler } = require('./handlers/catalog');
 const { streamHandler } = require('./handlers/stream');
 const { vodCatalogHandler, vodStreamHandler } = require('./handlers/vod');
+const { epgHandler } = require('./handlers/epg');
 
 const PORT = process.env.PORT || 7860;
 const app = express();
@@ -93,12 +94,12 @@ async function buildManifest(config) {
 
   return {
     id: 'community.livetv.' + Buffer.from(JSON.stringify(config)).toString('base64').slice(0, 12),
-    version: '1.1.0',
+    version: '1.2.0',
     name: 'Live TV',
     description: 'Live TV channels and VOD from your M3U playlist or Xtream Codes provider.',
     logo: 'https://dl.strem.io/addon-logo.png',
     background: 'https://dl.strem.io/addon-background.jpg',
-    resources: ['catalog', 'stream', 'meta'],
+    resources: ['catalog', 'stream', 'meta', 'scheduledVideos'],
     types,
     idPrefixes: ['xtream_', 'livetv_', 'vod_'],
     catalogs,
@@ -200,6 +201,13 @@ app.get('/:config/stream/:type/:id.json', async (req, res) => {
   const result = type === 'movie' || id.startsWith('vod_')
     ? await vodStreamHandler({ id }, config)
     : await streamHandler({ type, id }, config);
+  res.json(result);
+});
+
+app.get('/:config/scheduledVideos/:type/:id.json', async (req, res) => {
+  const config = decodeConfig(req.params.config);
+  if (!config) return res.status(400).json({ error: 'Invalid config' });
+  const result = await epgHandler({ type: req.params.type, id: req.params.id }, config);
   res.json(result);
 });
 
