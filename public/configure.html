@@ -354,17 +354,15 @@
     const grid = document.getElementById('country-grid');
     grid.innerHTML = '';
     previewData.countries.forEach(code => {
-      const chip = document.createElement('label');
+      const chip = document.createElement('div');
       chip.className = 'country-chip selected';
       chip.dataset.code = code;
       chip.innerHTML = `
-        <input type="checkbox" checked />
         <span class="country-code">${code}</span>
         <span class="chip-check">✓</span>
       `;
       chip.addEventListener('click', () => {
         chip.classList.toggle('selected');
-        chip.querySelector('input').checked = chip.classList.contains('selected');
         updateLabelEditor();
       });
       grid.appendChild(chip);
